@@ -57,11 +57,52 @@ setInterval(recycleOldLinks, 60 * 60 * 1000)
 
 app.get('/', (_, res) => {
   res.send(`
+    <!DOCTYPE html>
     <html>
-      <body style="font-family:monospace;padding:40px;background:#0f0f0f;color:#ccc">
+    <head>
+      <meta charset="utf-8" />
+      <title>URL Shortener</title>
+      <style>
+        body { font-family: monospace; background: #0f0f0f; color: #ccc; display: flex; justify-content: center; padding-top: 100px; margin: 0; }
+        .box { width: 100%; max-width: 480px; }
+        h2 { color: #fff; margin-bottom: 24px; }
+        input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #fff; font-family: monospace; font-size: 14px; box-sizing: border-box; }
+        button { margin-top: 10px; padding: 10px 24px; background: #ffad32; border: none; color: #000; font-family: monospace; font-size: 14px; cursor: pointer; }
+        button:hover { background: #ec9228; }
+        #result { margin-top: 20px; font-size: 14px; }
+        #result a { color: #ffad32; }
+        #result .err { color: #e05555; }
+      </style>
+    </head>
+    <body>
+      <div class="box">
         <h2>URL Shortener</h2>
-        <p>POST /shorten with <code>{ "url": "..." }</code></p>
-      </body>
+        <input id="url" type="text" placeholder="https://example.com" />
+        <br />
+        <button onclick="shorten()">Shorten</button>
+        <div id="result"></div>
+      </div>
+      <script>
+        async function shorten() {
+          const url = document.getElementById('url').value.trim()
+          const out = document.getElementById('result')
+          if (!url) return
+
+          const res = await fetch('/shorten', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          })
+          const data = await res.json()
+
+          if (res.ok) {
+            out.innerHTML = 'Short link: <a href="' + data.short_url + '" target="_blank">' + data.short_url + '</a>'
+          } else {
+            out.innerHTML = '<span class="err">' + data.error + '</span>'
+          }
+        }
+      </script>
+    </body>
     </html>
   `)
 })
